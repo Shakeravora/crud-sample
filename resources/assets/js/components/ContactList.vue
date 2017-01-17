@@ -4,24 +4,18 @@
         <div class="panel-body">
             <div class="table-responsive">
                 <router-link class="btn btn-primary btn-xs" title="Add New ContactList" to="/contact/0"><span class="glyphicon glyphicon-plus" aria-hidden="true"/></router-link>
-                <table class="table table-borderless">
-                    <thead>
-                    <tr>
-                        <th>ID</th><th> First Name </th><th> Last Name </th><th> Phone Number </th><th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="contact in contacts">
-                        <td>{{ contact.id }}</td>
-                        <td>{{ contact.first_name }}</td><td>{{ contact.last_name }}</td><td>{{ contact.phone_number }}</td>
-                        <td>
-                            <router-link :to="contactRoute(contact.id)" class="btn btn-success btn-xs" title="Edit Contact"><span class="glyphicon glyphicon-pencil" aria-hidden="true"/></router-link>
-                            <a @click.prevent="deleteContact(contact.id)" class="btn btn-danger btn-xs" title="Delete Contact"><span class="glyphicon glyphicon-trash" aria-hidden="true"/></a>
+                <vuetable ref="vuetable"
+                          api-url="/contacts"
+                          :fields="fields"
+                          pagination-path=""
+                          @vuetable:pagination-data="onPaginationData"
+                          @vuetable:cell-clicked="onCellClicked"
+                ></vuetable>
+                <vuetable-pagination ref="pagination"
+                                     @vuetable-pagination:change-page="onChangePage"
+                ></vuetable-pagination>
 
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+
             </div>
         </div>
     </div>
@@ -29,35 +23,78 @@
 
 <script>
     import Form from '../Form';
+    import Vuetable from 'vuetable-2/src/components/Vuetable.vue'
+    import VuetablePagination from 'vuetable-2/src/components/VuetablePagination.vue'
+    import Vue from 'vue'
 
     export default {
+        components: {
+            Vuetable,
+            VuetablePagination
+        },
         data()  {
             return {
-                contacts: []
+                contacts: [],
+                fields: [
+                    {
+                        name: 'first_name',
+                        title: 'First Name'
+                    },
+                    {
+                        name: 'last_name',
+                        title: 'Last Name'
+                    },
+                    {
+                        name: 'phone_number',
+                        title: 'Phone Number'
+                    },
+                    {
+                        name: 'edit',
+                        title: '',
+                        callback: 'editButton'
+                    },
+                    {
+                        name: 'delete',
+                        title: '',
+                        callback: 'deleteButton'
+                    },
+                ]
             }
         },
 
         methods: {
-            contactRoute(id) {
-                return '/contact/'+id;
+            deleteButton() {
+                return '<a class="btn btn-danger btn-xs" title="Delete Contact"><span class="glyphicon glyphicon-trash" aria-hidden="true"/></a>';
             },
-            refresh() {
-                axios.get('contacts').then(response => {
-                    this.contacts = response.data;
-                })
-
+            editButton() {
+                return '<a class="btn btn-success btn-xs" title="Edit Contact"><span class="glyphicon glyphicon-pencil" aria-hidden="true"/></a>';
+            },
+            onPaginationData (paginationData) {
+                this.$refs.pagination.setPaginationData(paginationData)
+            },
+            onChangePage (page) {
+                this.$refs.vuetable.changePage(page)
             },
             deleteContact(id) {
                 var temp = new Form({
                             id,
                             'url': '/contacts'
                         });
-                temp.delete();
-                this.refresh();
+                temp.delete().then(response=>{this.$refs.vuetable.reload();});
+
+            },
+            onCellClicked (data, field, event) {
+                if(field.name == 'edit') {
+                    this.$router.push('/contact/'+data.id);
+                }
+                else if(field.name == 'delete') {
+                    this.deleteContact(data.id);
+                }
+
             }
+
         },
         created() {
-            this.refresh();
             Event.listen('refresh-contact', this.refresh);
         },
         ready() {

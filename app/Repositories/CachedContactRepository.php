@@ -42,9 +42,9 @@ class CachedContactRepository implements ContactRepositoryInterface
         return $this->repository->destroy($id);
     }
 
-    public function getAll()
+    public function getAll($perPage, $page)
     {
         //TODO Cache it
-        return $this->repository->getAll();
+        return $this->repository->getAll($perPage, $page);
     }
 }

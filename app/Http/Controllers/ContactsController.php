@@ -25,9 +25,9 @@ class ContactsController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = $this->contact_repository->getAll();
+        $contacts = $this->contact_repository->getAll($request->get('per_page'), $request->get('page'));
         return response()->json($contacts);
     }
 
@@ -109,7 +109,6 @@ class ContactsController extends Controller
     {
         if($this->contact_repository->destroy($id))
         {
-            Session::flash('flash_message', 'ContactList deleted!');
             return response()->json(["status"=>true,"message"=> "Contact Deleted Successfully."]);
         }
         return response()->json(["status"=>false,"message"=> "Invalid Deletion Request!"]);

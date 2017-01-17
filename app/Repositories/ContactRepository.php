@@ -8,8 +8,8 @@ use App\Contact;
 
 class ContactRepository implements ContactRepositoryInterface
 {
-    public function getAll() {
-        return Contact::all();
+    public function getAll($perPage, $page) {
+        return Contact::paginate($perPage, ['*'], 'page', $page);
     }
 
     public function store($requestData){
